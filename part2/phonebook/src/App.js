@@ -3,12 +3,15 @@ import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
 import phonesService from './services/Phones'
+import Notification from './components/Notification'
 
 const App = () => {
   const [ persons, setPersons ] = useState([]) 
   const [ newName, setNewName ] = useState('')
   const [ newPhone, setNewPhone ] = useState('')
   const [ filterWord, setFilter ] = useState('')
+  const [ notification, setNotification] = useState({message: null, is_error: false})
+
   useEffect( () =>{
     phonesService.getAll()
     .then(persons => {
@@ -43,7 +46,8 @@ const App = () => {
             phonesService.replace(findPerson.id, newPerson)
             .then(returnedPerson => {
               setPersons(persons.map(person => person.id!==findPerson.id?person:returnedPerson))
-              return
+              setNotification({message: `Changed number for ${returnedPerson.name}`})
+              setTimeout(() =>{setNotification({message:null})}, 3000)
             })
           } else {
             return
@@ -54,20 +58,31 @@ const App = () => {
           setNewName('')
           setNewPhone('')
           setPersons(persons.concat(returnedPerson))
+          setNotification({message:`Added ${returnedPerson.name}`})
+          setTimeout(() =>{setNotification({message:null})}, 3000)
         })
       }
   }
+
   const handleDeletePerson = (id, name) => {
     if (window.confirm(`Delete ${name}?`)) {
     phonesService.remove(id)
       .then(() => {
         setPersons(persons.filter(person => person.id!==id))
+        setNotification({message: `Deleted ${name}`})
+        setTimeout(() =>{setNotification({message:null})}, 3000)
+      })
+      .catch(() => {
+        setPersons(persons.filter(person => person.id!==id))
+        setNotification({message: `Information of ${name} has already been removed from server`, is_error: true})
+        setTimeout(() =>{setNotification({message:null})}, 3000)
       })
     }
   }
 
   return (
     <div>
+      <Notification notification={notification}/>
       <h2>Phonebook</h2>
       <Filter handleFilterChange={handleFilterChange} value={filterWord}/>
       <h3>add a new</h3>
