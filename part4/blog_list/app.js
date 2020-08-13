@@ -12,6 +12,10 @@ const {
 const blogController = require('./controllers/blogsController');
 
 const mongoUrl = config.MONGO_URL;
+if (process.env.NODE_ENV === 'test') {
+  MONGODB_URI = process.env.TEST_MONGODB_URI
+}
+
 logger.info('connecting to MongoDB');
 mongoose
   .connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
