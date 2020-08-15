@@ -19,7 +19,7 @@ if (process.env.NODE_ENV === 'test') {
 
 logger.info('connecting to MongoDB');
 mongoose
-  .connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false, 'useCreateIndex': true })
   .then(() => {
     logger.info('connected to MongoDB');
   })
