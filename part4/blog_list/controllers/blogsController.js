@@ -1,18 +1,23 @@
 const route = require('express').Router();
 const Blog = require('../models/blog');
 
-route.get('/blogs', async (request, response) => {
+route.get('/', async (request, response) => {
   const blogs = await Blog.find({});
   response.json(blogs);
 });
 
-route.post('/blogs', async (request, response) => {
-  const blog = new Blog(request.body);
+route.post('/', async (request, response) => {
+  const { body } = request;
+  const { userId, ...newBlog } = body;
+  const user = await User.findById(userId);
+  const blog = new Blog({ ...newBlog, user: user._id });
   const savedBlog = await blog.save();
+  user.notes = user.notes.concat(savedBlog._id)
+  await user.save()
   response.status(201).json(savedBlog);
 });
 
-route.get('/blogs/:id', async (request, response) => {
+route.get('/:id', async (request, response) => {
   const blog = await Blog.findById(request.params.id);
   if (blog) {
     response.json(blog);
@@ -21,14 +26,17 @@ route.get('/blogs/:id', async (request, response) => {
   }
 });
 
-route.delete('/blogs/:id', async (request, response) => {
+route.delete('/:id', async (request, response) => {
   await Blog.findByIdAndRemove(request.params.id);
   response.status(204).end();
 });
 
-route.put('/blogs/:id', async (request, response) => {
+route.put('/:id', async (request, response) => {
   const { body } = request;
-  const updatedBlog = await Blog.findByIdAndUpdate(body.id, body,  { new: true,  runValidators: true});
+  const updatedBlog = await Blog.findByIdAndUpdate(body.id, body, {
+    new: true,
+    runValidators: true,
+  });
   response.json(updatedBlog);
 });
 
