@@ -6,6 +6,15 @@ const app = require('../app');
 const api = supertest(app);
 const User = require('../models/user');
 
+beforeEach(async () => {
+  await User.deleteMany({});
+
+  const passwordHash = await bcrypt.hash('sekret', 10);
+  const user = new User({ username: 'root', passwordHash });
+
+  await user.save();
+});
+
 describe('when there is initially some users saved', () => {
   test('users are returned as json', async () => {
     await api
@@ -16,21 +25,13 @@ describe('when there is initially some users saved', () => {
 });
 
 describe('when there is initially one user in db', () => {
-  beforeEach(async () => {
-    await User.deleteMany({});
-
-    const passwordHash = await bcrypt.hash('sekret', 10);
-    const user = new User({ username: 'root', passwordHash });
-
-    await user.save();
-  });
-
   test('creation succeeds with a fresh username', async () => {
     const usersAtStart = await helper.usersInDb();
     const newUser = {
       username: 'mluukkai',
       name: 'Matti Luukkainen',
       password: 'salainen',
+      blogs: []
     };
     await api
       .post('/api/users')
@@ -56,6 +57,40 @@ describe('when there is initially one user in db', () => {
       .expect(400)
       .expect('Content-Type', /application\/json/);
     expect(result.body.error).toContain('`username` to be unique');
+    const usersAtEnd = await helper.usersInDb();
+    expect(usersAtEnd).toHaveLength(usersAtStart.length);
+  });
+
+  test('creation fails if username less than 3 symbols', async () => {
+    const usersAtStart = await helper.usersInDb();
+    const newUser = {
+      username: 'ro',
+      name: 'test',
+      password: 'salainen',
+    };
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/);
+    expect(result.body.error).toContain('User validation failed: username:');
+    const usersAtEnd = await helper.usersInDb();
+    expect(usersAtEnd).toHaveLength(usersAtStart.length);
+  });
+  
+  test('creation fails if password less than 3 symbols', async () => {
+    const usersAtStart = await helper.usersInDb();
+    const newUser = {
+      username: 'rogfgf',
+      name: 'test',
+      password: 'sa',
+    };
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/);
+    expect(result.body.error).toContain('User validation failed: password:');
     const usersAtEnd = await helper.usersInDb();
     expect(usersAtEnd).toHaveLength(usersAtStart.length);
   });

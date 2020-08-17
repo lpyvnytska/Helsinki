@@ -4,6 +4,12 @@ const bcrypt = require('bcrypt');
 
 route.post('/', async (request, response) => {
   const body = request.body;
+  if (body.password.length < 3) {
+    return response.status(400).send({
+      error:
+        'User validation failed: password: Path `password` is shorter than the minimum allowed length (3).',
+    });
+  }
   const saltRounds = 10;
   const passwordHash = await bcrypt.hash(body.password, saltRounds);
   const user = new User({
@@ -16,7 +22,7 @@ route.post('/', async (request, response) => {
 });
 
 route.get('/', async (request, response) => {
-  const users = await User.find({});
+  const users = await User.find({}).populate('blogs', { user: 0 });
   response.json(users);
 });
 

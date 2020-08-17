@@ -6,11 +6,16 @@ const api = supertest(app);
 
 const Blog = require('../models/blog');
 
+let loginedUser;
+
 beforeEach(async () => {
+  const user = { username: 'root', password: 'sekret' };
+  loginedUser = await api.post('/api/login').send(user);
   await Blog.deleteMany({});
   const promises = helper.initialBlogs.map((blog) => new Blog(blog).save());
   await Promise.all(promises);
 });
+
 describe('when there is initially some blogs saved', () => {
   test('blogs are returned as json', async () => {
     await api
@@ -39,7 +44,6 @@ describe('when there is initially some blogs saved', () => {
 });
 
 describe('viewing a specific blog', () => {
-
   test('a specific blog can be viewed by id', async () => {
     const blogsAtStart = await helper.blogsInDb();
     const blogToView = blogsAtStart[0];
@@ -47,6 +51,8 @@ describe('viewing a specific blog', () => {
       .get(`/api/blogs/${blogToView.id}`)
       .expect(200)
       .expect('Content-Type', /application\/json/);
+    blogToView.user = blogToView.user.toString();
+    resultBlog.body.user = resultBlog.body.user.id.toString();
     expect(resultBlog.body).toEqual(blogToView);
   });
 
@@ -72,6 +78,7 @@ describe('addition of a new blog', () => {
     };
     await api
       .post('/api/blogs')
+      .set('Authorization', 'Bearer ' + loginedUser.body.token)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/);
@@ -79,7 +86,7 @@ describe('addition of a new blog', () => {
     const blogsAtEnd = await helper.blogsInDb();
     expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1);
     const blogsWithoutId = blogsAtEnd.map((r) => {
-      const { id, ...blog } = r;
+      const { id, user, ...blog } = r;
       return blog;
     });
     expect(blogsWithoutId).toContainEqual(newBlog);
@@ -94,6 +101,7 @@ describe('addition of a new blog', () => {
     };
     const savedBlog = await api
       .post('/api/blogs')
+      .set('Authorization', 'Bearer ' + loginedUser.body.token)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/);
@@ -110,7 +118,11 @@ describe('addition of a new blog', () => {
         'http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html',
       likes: 5,
     };
-    await api.post('/api/blogs').send(newBlog).expect(400);
+    await api
+      .post('/api/blogs')
+      .set('Authorization', 'Bearer ' + loginedUser.body.token)
+      .send(newBlog)
+      .expect(400);
     const blogsAtEnd = await helper.blogsInDb();
     expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length);
   });
@@ -121,7 +133,29 @@ describe('addition of a new blog', () => {
       author: 'Edsger W. Dijkstra',
       likes: 5,
     };
-    await api.post('/api/blogs').send(newBlog).expect(400);
+    await api
+      .post('/api/blogs')
+      .set('Authorization', 'Bearer ' + loginedUser.body.token)
+      .send(newBlog)
+      .expect(400);
+    const blogsAtEnd = await helper.blogsInDb();
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length);
+  });
+
+  test('fails with statuscode 401 if a valid blog added without token', async () => {
+    const newBlog = {
+      title: 'Go To Statement Considered Harmful',
+      author: 'Edsger W. Dijkstra',
+      url:
+        'http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html',
+      likes: 5,
+    };
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(401)
+      .expect('Content-Type', /application\/json/);
+
     const blogsAtEnd = await helper.blogsInDb();
     expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length);
   });
@@ -131,7 +165,10 @@ describe('deletion of the blog', () => {
   test('a blog can be deleted', async () => {
     const blogsAtStart = await helper.blogsInDb();
     const blogToDelete = blogsAtStart[0];
-    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', 'Bearer ' + loginedUser.body.token)
+      .expect(204);
     const blogsAtEnd = await helper.blogsInDb();
     expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1);
     const titles = blogsAtEnd.map((r) => r.title);
