@@ -17,7 +17,7 @@ const Blog = ({ blog, handleLikes, handleRemoveBlog, userId }) => {
     }
   };
   return (
-    <div style={blogStyle}>
+    <div style={blogStyle} className='blog'>
       {blog.title} {blog.author}
       <button onClick={() => setShowFullInfo(!showFullInfo)}>
         {buttonLabel}
