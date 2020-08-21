@@ -20,12 +20,19 @@ test('renders content', () => {
   expect(div).toHaveTextContent(
     'Component testing is done with react-testing-library'
   );
+  expect(div).toHaveTextContent(blog.author);
+  expect(div).not.toHaveTextContent(blog.url);
+  expect(div).not.toHaveTextContent('likes 7');
+  expect(div).not.toHaveTextContent(blog.user.name);
 
   const button = component.getByRole('button', { name: 'view' });
   fireEvent.click(button);
+  expect(div).toHaveTextContent(blog.url);
+  expect(div).toHaveTextContent('likes 7');
   expect(component.container).toContainHTML('<button>like</button>');
 //   component.debug()
   const buttonLike = component.getByRole('button', { name: 'like' });
   fireEvent.click(buttonLike);
-  expect(mockHandler.mock.calls).toHaveLength(1);
+  fireEvent.click(buttonLike);
+  expect(mockHandler.mock.calls).toHaveLength(2);
 });
