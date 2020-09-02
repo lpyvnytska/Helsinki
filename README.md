@@ -10,7 +10,7 @@
 ### Part4. Testing Express servers, user administration
 >Jest, Supertest
 ### Part5. Testing React apps
->Jest, React-testing-library
+>Jest, React-testing-library, Cypress
 ### Part6. Redux
 ### Part7. React router, custom hooks, styling app with CSS and webpack
 ### Part8. GraphQL
