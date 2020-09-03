@@ -85,13 +85,6 @@ const App = () => {
       blogForSend.user = blogForSend?.user?.id;
       blogService.update(id, blogForSend);
       setBlogs(blogs.map((blog) => (blog.id === id ? newBlog : blog)));
-      setNotification({
-        message: 'Blog has been removed',
-        is_error: false,
-      });
-      setTimeout(() => {
-        setNotification({ message: null, is_error: false });
-      }, 5000);
     } catch (error) {
       setNotification({ message: 'like was not added', is_error: true });
       setTimeout(() => {
@@ -104,6 +97,13 @@ const App = () => {
     try {
       await blogService.remove(blogId);
       setBlogs(blogs.filter((blog) => blog.id !== blogId));
+      setNotification({
+        message: 'Blog has been removed',
+        is_error: false,
+      });
+      setTimeout(() => {
+        setNotification({ message: null, is_error: false });
+      }, 5000);
     } catch (error) {
       setNotification({ message: error.response.data.error, is_error: true });
       setTimeout(() => {
