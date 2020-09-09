@@ -27,7 +27,7 @@ const reducer = (state = initialState, action) => {
       const changedAnec = { ...anecToChange, votes: anecToChange.votes + 1 };
       return state.map((anec) => (anec.id !== id ? anec : changedAnec));
     case 'NEW_ANECDOT':
-      return [...state, action.data]
+      return [...state, action.data];
     default:
       return state;
   }
@@ -47,8 +47,8 @@ export const createAnecdot = (content) => {
       content,
       id: getId(),
       votes: 0,
-    }
-  }
-}
+    },
+  };
+};
 
 export default reducer;
