@@ -12,6 +12,7 @@
 ### Part5. Testing React apps
 >Jest, React-testing-library, Cypress
 ### Part6. Redux
+>react-redux (useSelector, useDispatch, connect), redux-thunk, redux-devtools-extension
 ### Part7. React router, custom hooks, styling app with CSS and webpack
 ### Part8. GraphQL
 ### Part9. Typescript
