@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Switch,
   Link,
   Route,
   useHistory,
-  useRouteMatch
-} from 'react-router-dom';
+  useRouteMatch,
+} from "react-router-dom";
+import { useField } from "./hooks";
 
 const Menu = () => {
   const padding = {
@@ -75,33 +76,40 @@ const About = () => (
 
 const Footer = () => (
   <div>
-    Anecdote app for{' '}
+    Anecdote app for{" "}
     <a href="https://courses.helsinki.fi/fi/tkt21009">
       Full Stack -websovelluskehitys
     </a>
-    . See{' '}
+    . See{" "}
     <a href="https://github.com/fullstack-hy2020/routed-anecdotes/blob/master/src/App.js">
       https://github.com/fullstack-hy2019/routed-anecdotes/blob/master/src/App.js
-    </a>{' '}
+    </a>{" "}
     for the source code.
   </div>
 );
 
 const CreateNew = (props) => {
-  const [content, setContent] = useState('');
-  const [author, setAuthor] = useState('');
-  const [info, setInfo] = useState('');
+  const content = useField("content");
+  const author = useField("author");
+  const info = useField("info");
   const history = useHistory();
 
   const handleSubmit = (e) => {
     e.preventDefault();
     props.addNew({
-      content,
-      author,
-      info,
+      content: content.value,
+      author: author.value,
+      info: info.value,
       votes: 0,
     });
-    history.push('/');
+    history.push("/");
+  };
+
+  const resetCreateForm = (e) => {
+    e.preventDefault();
+    content.reset();
+    author.reset();
+    info.reset();
   };
 
   return (
@@ -111,28 +119,25 @@ const CreateNew = (props) => {
         <div>
           content
           <input
-            name="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+            value={content.value}
+            name={content.name}
+            onChange={content.onChange}
           />
         </div>
         <div>
           author
           <input
-            name="author"
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
+            value={author.value}
+            name={author.name}
+            onChange={author.onChange}
           />
         </div>
         <div>
           url for more info
-          <input
-            name="info"
-            value={info}
-            onChange={(e) => setInfo(e.target.value)}
-          />
+          <input value={info.value} name={info.name} onChange={info.onChange} />
         </div>
-        <button>create</button>
+        <button type="submit">create</button>
+        <button onClick={resetCreateForm}>reset</button>
       </form>
     </div>
   );
@@ -141,22 +146,22 @@ const CreateNew = (props) => {
 const App = () => {
   const [anecdotes, setAnecdotes] = useState([
     {
-      content: 'If it hurts, do it more often',
-      author: 'Jez Humble',
-      info: 'https://martinfowler.com/bliki/FrequencyReducesDifficulty.html',
+      content: "If it hurts, do it more often",
+      author: "Jez Humble",
+      info: "https://martinfowler.com/bliki/FrequencyReducesDifficulty.html",
       votes: 0,
-      id: '1',
+      id: "1",
     },
     {
-      content: 'Premature optimization is the root of all evil',
-      author: 'Donald Knuth',
-      info: 'http://wiki.c2.com/?PrematureOptimization',
+      content: "Premature optimization is the root of all evil",
+      author: "Donald Knuth",
+      info: "http://wiki.c2.com/?PrematureOptimization",
       votes: 0,
-      id: '2',
+      id: "2",
     },
   ]);
 
-  const [notification, setNotification] = useState('');
+  const [notification, setNotification] = useState("");
 
   const addNew = (anecdote) => {
     anecdote.id = (Math.random() * 10000).toFixed(0);
@@ -179,33 +184,35 @@ const App = () => {
 
   const Notification = ({ notification }) => {
     setTimeout(() => {
-      setNotification('');
+      setNotification("");
     }, 10000);
     return notification;
   };
-const match = useRouteMatch('/anecdotes/:id')
-const anecdote = match?anecdotes.find((n) => n.id === match.params.id):null
+  const match = useRouteMatch("/anecdotes/:id");
+  const anecdote = match
+    ? anecdotes.find((n) => n.id === match.params.id)
+    : null;
   return (
-      <div>
-        <h1>Software anecdotes</h1>
-        <Menu />
-        <Notification notification={notification} />
-        <Switch>
-          <Route path="/about">
-            <About />
-          </Route>
-          <Route path="/create">
-            <CreateNew addNew={addNew} />
-          </Route>
-          <Route path="/anecdotes/:id">
-            <Anecdote anecdote={anecdote} />
-          </Route>
-          <Route path="/">
-            <AnecdoteList anecdotes={anecdotes} />
-          </Route>
-        </Switch>
-        <Footer />
-      </div>
+    <div>
+      <h1>Software anecdotes</h1>
+      <Menu />
+      <Notification notification={notification} />
+      <Switch>
+        <Route path="/about">
+          <About />
+        </Route>
+        <Route path="/create">
+          <CreateNew addNew={addNew} />
+        </Route>
+        <Route path="/anecdotes/:id">
+          <Anecdote anecdote={anecdote} />
+        </Route>
+        <Route path="/">
+          <AnecdoteList anecdotes={anecdotes} />
+        </Route>
+      </Switch>
+      <Footer />
+    </div>
   );
 };
 
